@@ -1,7 +1,7 @@
 # My Awesome Pancake
 
 ## It is very great
-- Add demos here
+- [First Demo](Github repo test)
 
 ## Assignments
 - I will not put assignments here
