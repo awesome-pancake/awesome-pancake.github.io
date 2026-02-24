@@ -56,8 +56,9 @@ function mouseWheel(){
   // Control the zoom of the graph
   if(event.delta > 0 && zoom <= 60){
     zoom *= 1.1;
-  } else if (event.delta < 0 && zoom >= 1.5){
-    zoom /= (zoom !== 1) ? 1.1 : 1;
+  } 
+  else if (event.delta < 0 && zoom >= 1.5){
+    zoom /= zoom !== 1 ? 1.1 : 1;
   }
   update();
 }
@@ -118,7 +119,8 @@ function plotPoints(){
     if(math.abs(nextY - y) >= 40){
       stroke("grey");
       strokeWeight(1);
-    } else {
+    } 
+    else {
       stroke(210,80,80);
       strokeWeight(3);
     }
@@ -132,7 +134,7 @@ function evaluateFunc(x){
   // Uses math.js to evaluate a user-enterred function at a point.
   let newFunc = "";
   for (let character of func){
-    newFunc += (character === "x") ? "(" + x.toString() + ")" : character;
+    newFunc += character === "x" ? "(" + x.toString() + ")" : character;
   }
   return math.evaluate(newFunc);
 }
