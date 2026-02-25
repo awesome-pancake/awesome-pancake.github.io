@@ -1,22 +1,24 @@
-// Project Title
-// Your Name
-// Date
+// Graphing Calculator
+// Emmett Hoffman
+// February 27, 2026
 //
 // Extra for Experts:
-// - describe what you did to take this project "above and beyond"
+// - I learned how to import libraries and used it to evaluate a user-entered function
+// - I also learned about various screen elements like input bars, buttons, and lines
 
 // Parameters for the gridlines
 let zoom=10;
 let lineSpacingX;
 let lineSpacingY;
 
-// Variables relating to the user enterred function
-let func = "1x^3 + 5x^2 -8";
+// Variables relating to the user entered function
+let func = "x - (1/6)*x^3 + (1/120)*x^5 - (1/5040)*x^7 + (1/362880)*x^9";
 let eqInput;
 let plotButton;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
+  noLoop();
   
   // Creates the input bar
   eqInput = createInput();
@@ -47,13 +49,13 @@ function buttonHandle(){
 }
 
 function windowResized() {
-  // Resizes canvas based on window dimensions
+  // Dynamically resizes canvas based on window dimensions
   resizeCanvas(windowWidth, windowHeight);
   update();
 }
 
 function mouseWheel(){
-  // Control the zoom of the graph
+  // Controls the zoom of the graph
   if(event.delta > 0 && zoom <= 60){
     zoom *= 1.1;
   } 
@@ -64,11 +66,13 @@ function mouseWheel(){
 }
 
 function drawGraph(){
-  // Draw grid lines
+  // Draws the grid lines
+
   let lastDrawn = 0;
   
   stroke("lightgrey");
   strokeWeight(1);
+
   for(let x=0; x<=width/2; x+=1){ // Draw vertical lines
     if((x-lastDrawn)*lineSpacingX>=(width/2-20)/15){
       line(x*lineSpacingX + width/2, 10, x*lineSpacingX + width/2, height-10);
@@ -85,6 +89,7 @@ function drawGraph(){
   lastDrawn = 0;
   for(let y=0; y<=height/2; y+=1){ // Draw horizontal lines
     if((y-lastDrawn)*lineSpacingY>=(height/2-20)/15){
+
       line(10, y*lineSpacingY + height/2, width-10, y*lineSpacingY + height/2);
       line(10, -y*lineSpacingY + height/2, width-10, -y*lineSpacingY + height/2);
 
