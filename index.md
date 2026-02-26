@@ -1,4 +1,4 @@
-# My Awesome Pancake
+# Emmett's Github Repo
 
 ## Demos
 - [First Demo](repo-test)
