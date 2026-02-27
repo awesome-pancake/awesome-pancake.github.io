@@ -1,4 +1,4 @@
-// Graphing Calculator
+// Graphing Calculator (Demsos)
 // Emmett Hoffman
 // February 27, 2026
 //
@@ -17,7 +17,9 @@ let eqInput;
 let plotButton;
 
 function setup() {
-  createCanvas(windowWidth, windowHeight);
+  // Creates the maximum possible square size
+  createCanvas(math.min(windowWidth, windowHeight), 
+    math.min(windowWidth, windowHeight));
   noLoop();
   
   // Creates the input bar
@@ -50,13 +52,14 @@ function buttonHandle(){
 
 function windowResized() {
   // Dynamically resizes canvas based on window dimensions
-  resizeCanvas(windowWidth, windowHeight);
+  resizeCanvas(math.min(windowWidth, windowHeight), 
+    math.min(windowWidth, windowHeight));
   update();
 }
 
 function mouseWheel(){
   // Controls the zoom of the graph
-  if(event.delta > 0 && zoom <= 60){
+  if(event.delta > 0 && zoom <= 10){
     zoom *= 1.1;
   } 
   else if (event.delta < 0 && zoom >= 1.5){
@@ -112,26 +115,26 @@ function plotPoints(){
   // Rewrite this soon
   let y;
   let nextY;
-  let dx = 0.1;
+  let dx = zoom/200;
   
   // Plot function 2
   stroke(210,80,80);
   strokeWeight(3);
-  for(let x=-zoom; x<=zoom; x+=dx){
+  for(let x=-zoom; x<=zoom;){
     y = evaluateFunc(x);
     nextY = evaluateFunc(x+dx);
     
-    if(math.abs(nextY - y) >= 40){
-      stroke("grey");
-      strokeWeight(1);
+    // Basic vertical asymptote detection
+    if(!(math.abs(nextY - y) >= 150/zoom)){
+      line(x*lineSpacingX + width/2, -y*lineSpacingY + height/2,
+        (x+dx)*lineSpacingX + width/2, -nextY*lineSpacingY + height/2);
     } 
-    else {
-      stroke(210,80,80);
-      strokeWeight(3);
-    }
-    
-    line(x*lineSpacingX + width/2, -y*lineSpacingY + height/2,
-      (x+dx)*lineSpacingX + width/2, -nextY*lineSpacingY + height/2);
+    /*else {
+      line(x*lineSpacingX + width/2, -y*lineSpacingY + height/2,
+        x*lineSpacingX + width/2, 0);
+    }*/
+
+    x += dx;
   }
 }
 
