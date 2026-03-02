@@ -57,9 +57,9 @@ function windowResized() {
   update();
 }
 
-function mouseWheel(){
+function mouseWheel(event){
   // Controls the zoom of the graph
-  if(event.delta > 0 && zoom <= 10){
+  if(event.delta > 0 && zoom <= 20){
     zoom *= 1.1;
   } 
   else if (event.delta < 0 && zoom >= 1.5){
@@ -71,13 +71,13 @@ function mouseWheel(){
 function drawGraph(){
   // Draws the grid lines
 
-  let lastDrawn = 0;
+  let lastDrawn = 0; // stores the position of the last drawn gridline
   
   stroke("lightgrey");
   strokeWeight(1);
 
   for(let x=0; x<=width/2; x+=1){ // Draw vertical lines
-    if((x-lastDrawn)*lineSpacingX>=(width/2-20)/15){
+    if((x-lastDrawn)*lineSpacingX>=(width/2-20)/15){ // Only draws lines if they are a certain distance apart for scaling
       line(x*lineSpacingX + width/2, 10, x*lineSpacingX + width/2, height-10);
       line(-x*lineSpacingX + width/2, 10, -x*lineSpacingX + width/2, height-10);
 
@@ -112,15 +112,14 @@ function drawGraph(){
 
 function plotPoints(){
   // Plot points of the graph
-  // Rewrite this soon
   let y;
   let nextY;
   let dx = zoom/200;
   
-  // Plot function 2
+  // Plots the function as a sequence of lines connecting each point
   stroke(210,80,80);
   strokeWeight(3);
-  for(let x=-zoom; x<=zoom;){
+  for(let x=-zoom; x<=zoom; x+=dx){
     y = evaluateFunc(x);
     nextY = evaluateFunc(x+dx);
     
@@ -129,20 +128,14 @@ function plotPoints(){
       line(x*lineSpacingX + width/2, -y*lineSpacingY + height/2,
         (x+dx)*lineSpacingX + width/2, -nextY*lineSpacingY + height/2);
     } 
-    /*else {
-      line(x*lineSpacingX + width/2, -y*lineSpacingY + height/2,
-        x*lineSpacingX + width/2, 0);
-    }*/
-
-    x += dx;
   }
 }
 
 function evaluateFunc(x){
   // Uses math.js to evaluate a user-enterred function at a point.
-  let newFunc = "";
+  let subbedFunc = "";
   for (let character of func){
-    newFunc += character === "x" ? "(" + x.toString() + ")" : character;
+    subbedFunc += character === "x" ? "(" + x.toString() + ")" : character;
   }
-  return math.evaluate(newFunc);
+  return math.evaluate(subbedFunc);
 }
