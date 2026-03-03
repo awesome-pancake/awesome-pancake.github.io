@@ -3,7 +3,6 @@ let churchImg;
 
 function preload(){
   churchImg = loadImage("church.png");
-  
 }
 
 function setup() {
