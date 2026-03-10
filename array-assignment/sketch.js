@@ -33,6 +33,8 @@ class Particle {
   }
 }
 
+// To Do: add a separate box class that simulation inherits from for the tube in the middle
+
 class Simulation {
   // Simulation methods and objects
   constructor(_x=0, _y=0, _w=500, _h=500, _l=500, _thickness=5){
