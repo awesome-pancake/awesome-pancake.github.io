@@ -10,7 +10,7 @@
 // 1 px = 38.891 nm
 // 1 frame = 1 ns
 // 1 AMU = 6.022x10^-26 kg
-const DIAMETER = 10; // Diameter of each particle in pixels
+const DIAMETER = 5; // Diameter of each particle in pixels
 const MASS = 4; // Mass of each particle in AMU
 const K = 0.1; // Boltzmann constant
 let startSpeed = 5;
@@ -52,7 +52,7 @@ class Box {
 
 class Simulation extends Box {
   // Simulation methods and objects
-  constructor(_x=0, _y=0, _w=500, _h=500, _l=500, _thickness=5, _func=function(){return 0;}){
+  constructor(_x=0, _y=0, _w=500, _h=500, _l=500, _thickness=5, _handle=function(){}){
     super(_x, _y, _w, _h, _l);
     this.thickness = _thickness;
 
@@ -65,9 +65,10 @@ class Simulation extends Box {
     };
 
     // Implements a handler that modifies the state of each particle on each simulation tick
-    if(typeof _func === "function"){
-      this.stateHandle = _func;
-    } else {
+    if(typeof _handle === "function"){
+      this.stateHandle = _handle;
+    }
+    else {
       throw new Error("stateHandle must be a function");
     }
 
@@ -86,6 +87,11 @@ class Simulation extends Box {
 
   update(){
     // Updates the state of each particle and draws them
+
+    // Draw box
+    strokeWeight(this.thickness);
+    fill("black");
+    rect(this.x, this.y, this.w, this.h);
 
     // Set state variables
     this.state.kineticEnergy = 0;
@@ -122,7 +128,7 @@ class Simulation extends Box {
 }
 
 function accelerating(p, local){
-  p.dy += 0.05;
+  p.dx += 0.1;
 }
 
 let bounds = new Simulation(50, 50, 600, 600, 600, 0, accelerating);
@@ -132,7 +138,7 @@ let maxwell = new Box(650, 325, 50, 50, 50);
 function mouseWheel(event){
   // Changes the speed of the spawning gas
   if(event.delta <= 0){
-    startSpeed *= 1.1;
+    startSpeed *= startSpeed <= 10 ? 1.1 : 1;
   } 
   else {
     startSpeed /= startSpeed <= 1 ? 1 : 1.1;
@@ -149,23 +155,27 @@ function draw() {
 
   // Put all of this in a display state function
   fill("black");
-  text(`PV = NkT`, 100, 700);
-  text(`N=${bounds.state.number}`, 100, 740);
-  text(`V=${round(bounds.state.volume*5.88*10**-5, 2)} μm^3`, 100, 770);
-  text(`T=${round(bounds.state.temperature,2)} K`, 100, 800);
-  text(`P=${round(bounds.state.pressure*2.511*10**6,2)} MPa`, 100, 830);
+  text(`PV = NkT`, 50, 700);
+  text(`N=${bounds.state.number}`, 50, 740);
+  text(`V=${round(bounds.state.volume*5.88*10**-5, 2)} μm^3`, 50, 770);
+  text(`T=${round(bounds.state.temperature,2)} K`, 50, 800);
+  text(`P=${round(bounds.state.pressure*2.511*10**6,2)} MPa`, 50, 830);
 
-  strokeWeight(bounds.thickness);
-  rect(bounds.x, bounds.y, bounds.w, bounds.h);
-  rect(bounds2.x, bounds2.y, bounds2.w, bounds2.h);
+  text(`PV = NkT`, 700, 700);
+  text(`N=${bounds2.state.number}`, 700, 740);
+  text(`V=${round(bounds2.state.volume*5.88*10**-5, 2)} μm^3`, 700, 770);
+  text(`T=${round(bounds2.state.temperature,2)} K`, 700, 800);
+  text(`P=${round(bounds2.state.pressure*2.511*10**6,2)} MPa`, 700, 830);
+
   fill("grey");
   rect(maxwell.x, maxwell.y, maxwell.w, maxwell.h);
 
+  angle = random(0, 2*PI);
   if(mouseIsPressed && bounds.inBounds(mouseX, mouseY, DIAMETER)){
-    bounds.particleArray.push(new Particle(mouseX, mouseY, random(-startSpeed,startSpeed), random(-startSpeed,startSpeed)));
+    bounds.particleArray.push(new Particle(mouseX, mouseY, startSpeed*cos(angle), startSpeed*sin(angle)));
   }
   if(mouseIsPressed && bounds2.inBounds(mouseX, mouseY, DIAMETER)){
-    bounds2.particleArray.push(new Particle(mouseX, mouseY, random(-startSpeed,startSpeed), random(-startSpeed,startSpeed)));
+    bounds2.particleArray.push(new Particle(mouseX, mouseY, startSpeed*cos(angle), startSpeed*sin(angle)));
   }
 
   bounds.update();
