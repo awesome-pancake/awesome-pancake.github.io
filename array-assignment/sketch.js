@@ -17,11 +17,11 @@ let startSpeed = 5;
 
 class Particle {
   // Methods and objects for particles
-  constructor(_x, _y){
+  constructor(_x, _y, _dx, _dy){
     this.x = _x;
     this.y = _y;
-    this.dx = random(-startSpeed,startSpeed);
-    this.dy = random(-startSpeed,startSpeed);
+    this.dx = _dx;
+    this.dy = _dy;
   }
 
   speed(){
@@ -29,20 +29,31 @@ class Particle {
   }
 
   speedColour(){
-    return color(100*this.speed(), 60, 255-30*this.speed());
+    return color(90*this.speed(), 60, 255-30*this.speed());
   }
 }
 
-// To Do: add a separate box class that simulation inherits from for the tube in the middle
-
-class Simulation {
-  // Simulation methods and objects
-  constructor(_x=0, _y=0, _w=500, _h=500, _l=500, _thickness=5){
+class Box {
+  constructor(_x=0, _y=0, _w=500, _h=500, _l=500){
     this.x = _x;
     this.y = _y;
     this.w = _w;
     this.h = _h;
     this.l = _l;
+  }
+
+  inBounds(_x, _y, space=0){
+    // Determines if a given x and y coordinate is in the bounds of the box.
+    return _x >= this.x + space && _y >= this.y + space && _x + space <= this.x + this.w && _y + space <= this.y + this.h;
+  }
+
+  // Add a method to draw the box
+}
+
+class Simulation extends Box {
+  // Simulation methods and objects
+  constructor(_x=0, _y=0, _w=500, _h=500, _l=500, _thickness=5, _func=function(){return 0;}){
+    super(_x, _y, _w, _h, _l);
     this.thickness = _thickness;
 
     this.state = {
@@ -53,12 +64,14 @@ class Simulation {
       volume: 0, // Either keep this, or remove Box.volume()
     };
 
-    this.particleArray = [];
-  }
+    // Implements a handler that modifies the state of each particle on each simulation tick
+    if(typeof _func === "function"){
+      this.stateHandle = _func;
+    } else {
+      throw new Error("stateHandle must be a function");
+    }
 
-  inBounds(_x, _y, space=0){
-    // Determines if a given x and y coordinate is in the bounds of the simulation.
-    return _x >= this.x + space && _y >= this.y + space && _x + space <= this.x + this.w && _y + space <= this.y + this.h;
+    this.particleArray = [];
   }
 
   findTemp(){
@@ -74,6 +87,7 @@ class Simulation {
   update(){
     // Updates the state of each particle and draws them
 
+    // Set state variables
     this.state.kineticEnergy = 0;
     this.state.number = this.particleArray.length;
     this.state.volume = this.l * this.w * this.h;
@@ -84,7 +98,9 @@ class Simulation {
       fill(p.speedColour());
       circle(p.x, p.y, DIAMETER);
 
+      // Update state variables
       this.state.kineticEnergy += 0.5*MASS*p.speed()**2/this.state.number;
+      this.stateHandle(p, this);
 
       // Edge detection
       if(p.x + DIAMETER/2 >= this.x + this.w || p.x - DIAMETER/2 <= this.x){
@@ -99,24 +115,28 @@ class Simulation {
       p.y += p.dy;
     }
 
+    // Update state variables
     this.findTemp();
     this.findPressure();
   }
 }
 
-let bounds = new Simulation(100, 100, 500, 500, 500, 5);
-let bounds2 = new Simulation(700, 100, 800, 800, 400, 5);
+function accelerating(p, local){
+  p.dy += 0.05;
+}
+
+let bounds = new Simulation(50, 50, 600, 600, 600, 0, accelerating);
+let bounds2 = new Simulation(700, 50, 600, 600, 600, 0);
+let maxwell = new Box(650, 325, 50, 50, 50);
 
 function mouseWheel(event){
   // Changes the speed of the spawning gas
-  // Make this better like instantly
-  if(event.delta >= 0){
+  if(event.delta <= 0){
     startSpeed *= 1.1;
   } 
   else {
     startSpeed /= startSpeed <= 1 ? 1 : 1.1;
   }
-  update();
 }
 
 function setup() {
@@ -127,24 +147,25 @@ function setup() {
 function draw() {
   background(220);
 
+  // Put all of this in a display state function
   fill("black");
   text(`PV = NkT`, 100, 700);
   text(`N=${bounds.state.number}`, 100, 740);
   text(`V=${round(bounds.state.volume*5.88*10**-5, 2)} μm^3`, 100, 770);
-  //text(`KE(avg)=${round(state.kineticEnergy, 2)}`, 100, 800);
   text(`T=${round(bounds.state.temperature,2)} K`, 100, 800);
   text(`P=${round(bounds.state.pressure*2.511*10**6,2)} MPa`, 100, 830);
 
   strokeWeight(bounds.thickness);
-  //fill("white");
   rect(bounds.x, bounds.y, bounds.w, bounds.h);
   rect(bounds2.x, bounds2.y, bounds2.w, bounds2.h);
+  fill("grey");
+  rect(maxwell.x, maxwell.y, maxwell.w, maxwell.h);
 
   if(mouseIsPressed && bounds.inBounds(mouseX, mouseY, DIAMETER)){
-    bounds.particleArray.push(new Particle(mouseX, mouseY));
+    bounds.particleArray.push(new Particle(mouseX, mouseY, random(-startSpeed,startSpeed), random(-startSpeed,startSpeed)));
   }
   if(mouseIsPressed && bounds2.inBounds(mouseX, mouseY, DIAMETER)){
-    bounds2.particleArray.push(new Particle(mouseX, mouseY));
+    bounds2.particleArray.push(new Particle(mouseX, mouseY, random(-startSpeed,startSpeed), random(-startSpeed,startSpeed)));
   }
 
   bounds.update();
