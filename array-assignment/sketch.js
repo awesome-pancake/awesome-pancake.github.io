@@ -10,7 +10,7 @@
 // 1 px = 38.891 nm
 // 1 frame = 1 ns
 // 1 AMU = 6.022x10^-26 kg
-const DIAMETER = 5; // Diameter of each particle in pixels
+const DIAMETER = 10; // Diameter of each particle in pixels
 const MASS = 4; // Mass of each particle in AMU
 const K = 0.1; // Boltzmann constant
 let startSpeed = 5;
@@ -127,13 +127,35 @@ class Simulation extends Box {
   }
 }
 
-function accelerating(p, local){
-  p.dx += 0.1;
+function transferHot(p, local){
+  // Implements the functionality of maxwell's demon for the left box
+  if(maxwell.inBounds(p.x, p.y, -DIAMETER/2) && p.speed()>=3){
+    // Add particle to other box
+    let newParticle = new Particle(p.x+maxwell.w+DIAMETER, p.y, p.dx, p.dy);
+    bounds2.particleArray.push(newParticle);
+
+    // Remove particle from current box
+    let particleIndex = local.particleArray.indexOf(p);
+    local.particleArray.splice(particleIndex, 1);
+  }
 }
 
-let bounds = new Simulation(50, 50, 600, 600, 600, 0, accelerating);
-let bounds2 = new Simulation(700, 50, 600, 600, 600, 0);
-let maxwell = new Box(650, 325, 50, 50, 50);
+function transferCold(p, local){
+  // Implements the functionality of maxwell's demon for the right box
+  if(maxwell.inBounds(p.x, p.y, -DIAMETER/2) && p.speed()<3){
+    // Add particle to other box
+    let newParticle = new Particle(p.x-maxwell.w-DIAMETER, p.y, p.dx, p.dy);
+    bounds.particleArray.push(newParticle);
+
+    // Remove particle from current box
+    let particleIndex = local.particleArray.indexOf(p);
+    local.particleArray.splice(particleIndex, 1);
+  }
+}
+
+let bounds = new Simulation(50, 50, 600, 600, 600, 0, transferHot);
+let bounds2 = new Simulation(700, 50, 600, 600, 600, 0, transferCold);
+let maxwell = new Box(650, 275, 50, 125, 50);
 
 function mouseWheel(event){
   // Changes the speed of the spawning gas
@@ -170,12 +192,11 @@ function draw() {
   fill("grey");
   rect(maxwell.x, maxwell.y, maxwell.w, maxwell.h);
 
-  angle = random(0, 2*PI);
   if(mouseIsPressed && bounds.inBounds(mouseX, mouseY, DIAMETER)){
-    bounds.particleArray.push(new Particle(mouseX, mouseY, startSpeed*cos(angle), startSpeed*sin(angle)));
+    bounds.particleArray.push(new Particle(mouseX, mouseY, random(-startSpeed, startSpeed), random(-startSpeed, startSpeed)));
   }
   if(mouseIsPressed && bounds2.inBounds(mouseX, mouseY, DIAMETER)){
-    bounds2.particleArray.push(new Particle(mouseX, mouseY, startSpeed*cos(angle), startSpeed*sin(angle)));
+    bounds2.particleArray.push(new Particle(mouseX, mouseY, random(-startSpeed, startSpeed), random(-startSpeed, startSpeed)));
   }
 
   bounds.update();
