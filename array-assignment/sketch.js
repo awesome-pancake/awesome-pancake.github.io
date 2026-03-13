@@ -43,7 +43,7 @@ class Box {
   }
 
   inBounds(_x, _y, space=0){
-    // Determines if a given x and y coordinate is in the bounds of the box.
+    // Determines if a given x and y coordinate is in the leftBox of the box.
     return _x >= this.x + space && _y >= this.y + space && _x + space <= this.x + this.w && _y + space <= this.y + this.h;
   }
 
@@ -125,6 +125,16 @@ class Simulation extends Box {
     this.findTemp();
     this.findPressure();
   }
+
+  displayState(){
+    fill("black");
+
+    text(`PV = NkT`, this.x, this.h + this.y + 50);
+    text(`N=${this.state.number}`, this.x, this.h + this.y + 90);
+    text(`V=${round(this.state.volume*5.88*10**-5, 2)} μm^3`, this.x, this.h + this.y + 120);
+    text(`T=${round(this.state.temperature,2)} K`, this.x, this.h + this.y + 150);
+    text(`P=${round(this.state.pressure*2.511*10**6,2)} MPa`, this.x, this.h + this.y + 180);
+  }
 }
 
 function transferHot(p, local){
@@ -132,7 +142,7 @@ function transferHot(p, local){
   if(maxwell.inBounds(p.x, p.y, -DIAMETER/2) && p.speed()>=3){
     // Add particle to other box
     let newParticle = new Particle(p.x+maxwell.w+DIAMETER, p.y, p.dx, p.dy);
-    bounds2.particleArray.push(newParticle);
+    rightBox.particleArray.push(newParticle);
 
     // Remove particle from current box
     let particleIndex = local.particleArray.indexOf(p);
@@ -145,7 +155,7 @@ function transferCold(p, local){
   if(maxwell.inBounds(p.x, p.y, -DIAMETER/2) && p.speed()<3){
     // Add particle to other box
     let newParticle = new Particle(p.x-maxwell.w-DIAMETER, p.y, p.dx, p.dy);
-    bounds.particleArray.push(newParticle);
+    leftBox.particleArray.push(newParticle);
 
     // Remove particle from current box
     let particleIndex = local.particleArray.indexOf(p);
@@ -153,8 +163,8 @@ function transferCold(p, local){
   }
 }
 
-let bounds = new Simulation(50, 50, 600, 600, 600, 0, transferHot);
-let bounds2 = new Simulation(700, 50, 600, 600, 600, 0, transferCold);
+let leftBox = new Simulation(50, 50, 600, 600, 600, 0, transferHot);
+let rightBox = new Simulation(700, 50, 600, 600, 600, 0, transferCold);
 let maxwell = new Box(650, 275, 50, 125, 50);
 
 function mouseWheel(event){
@@ -167,38 +177,33 @@ function mouseWheel(event){
   }
 }
 
+function windowResized(){
+  resizeCanvas(windowWidth, windowHeight);
+}
+
 function setup() {
   createCanvas(windowWidth, windowHeight);
   textSize(25);
 }
 
 function draw() {
-  background(220);
+  background(150);
 
   // Put all of this in a display state function
-  fill("black");
-  text(`PV = NkT`, 50, 700);
-  text(`N=${bounds.state.number}`, 50, 740);
-  text(`V=${round(bounds.state.volume*5.88*10**-5, 2)} μm^3`, 50, 770);
-  text(`T=${round(bounds.state.temperature,2)} K`, 50, 800);
-  text(`P=${round(bounds.state.pressure*2.511*10**6,2)} MPa`, 50, 830);
 
-  text(`PV = NkT`, 700, 700);
-  text(`N=${bounds2.state.number}`, 700, 740);
-  text(`V=${round(bounds2.state.volume*5.88*10**-5, 2)} μm^3`, 700, 770);
-  text(`T=${round(bounds2.state.temperature,2)} K`, 700, 800);
-  text(`P=${round(bounds2.state.pressure*2.511*10**6,2)} MPa`, 700, 830);
+  leftBox.displayState();
+  rightBox.displayState();
 
   fill("grey");
   rect(maxwell.x, maxwell.y, maxwell.w, maxwell.h);
 
-  if(mouseIsPressed && bounds.inBounds(mouseX, mouseY, DIAMETER)){
-    bounds.particleArray.push(new Particle(mouseX, mouseY, random(-startSpeed, startSpeed), random(-startSpeed, startSpeed)));
+  if(mouseIsPressed && leftBox.inBounds(mouseX, mouseY, DIAMETER)){
+    leftBox.particleArray.push(new Particle(mouseX, mouseY, random(-startSpeed, startSpeed), random(-startSpeed, startSpeed)));
   }
-  if(mouseIsPressed && bounds2.inBounds(mouseX, mouseY, DIAMETER)){
-    bounds2.particleArray.push(new Particle(mouseX, mouseY, random(-startSpeed, startSpeed), random(-startSpeed, startSpeed)));
+  if(mouseIsPressed && rightBox.inBounds(mouseX, mouseY, DIAMETER)){
+    rightBox.particleArray.push(new Particle(mouseX, mouseY, random(-startSpeed, startSpeed), random(-startSpeed, startSpeed)));
   }
 
-  bounds.update();
-  bounds2.update();
+  leftBox.update();
+  rightBox.update();
 }
