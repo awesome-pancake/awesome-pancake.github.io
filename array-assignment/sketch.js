@@ -9,7 +9,7 @@
 // This simulation uses a unit system based on SI:
 // 1 px = 38.891 nm
 // 1 frame = 1 ns
-// 1 AMU = 6.022x10^-26 kg
+// 1 mass unit = 1 AMU = 6.022x10^-26 kg
 const DIAMETER = 10; // Diameter of each particle in pixels
 const MASS = 4; // Mass of each particle in AMU
 const K = 0.1; // Boltzmann constant
@@ -18,14 +18,14 @@ let startSpeed = 5;
 class Particle {
   // Methods and objects for particles
   constructor(_x, _y, _dx, _dy){
-    this.x = _x;
-    this.y = _y;
-    this.dx = _dx;
-    this.dy = _dy;
+    this.xPos = _x;
+    this.yPos = _y;
+    this.xSpeed = _dx;
+    this.ySpeed = _dy;
   }
 
   speed(){
-    return sqrt(this.dx**2 + this.dy**2);
+    return sqrt(this.xSpeed**2 + this.ySpeed**2);
   }
 
   speedColour(){
@@ -35,16 +35,16 @@ class Particle {
 
 class Box {
   constructor(_x=0, _y=0, _w=500, _h=500, _l=500){
-    this.x = _x;
-    this.y = _y;
-    this.w = _w;
-    this.h = _h;
-    this.l = _l;
+    this.xPos = _x;
+    this.yPos = _y;
+    this.width = _w;
+    this.height = _h;
+    this.length = _l;
   }
 
   inBounds(_x, _y, space=0){
     // Determines if a given x and y coordinate is in the leftBox of the box.
-    return _x >= this.x + space && _y >= this.y + space && _x + space <= this.x + this.w && _y + space <= this.y + this.h;
+    return _x >= this.xPos+ space && _y >= this.yPos + space && _x + space <= this.xPos + this.width && _y + space <= this.yPos + this.height;
   }
 
   // Add a method to draw the box
@@ -91,34 +91,34 @@ class Simulation extends Box {
     // Draw box
     strokeWeight(this.thickness);
     fill("black");
-    rect(this.x, this.y, this.w, this.h);
+    rect(this.xPos, this.yPos, this.width, this.height);
 
     // Set state variables
     this.state.kineticEnergy = 0;
     this.state.number = this.particleArray.length;
-    this.state.volume = this.l * this.w * this.h;
+    this.state.volume = this.length * this.width * this.height;
 
     strokeWeight(0);
     for(let p of this.particleArray){
       // Draw particle
       fill(p.speedColour());
-      circle(p.x, p.y, DIAMETER);
+      circle(p.xPos, p.yPos, DIAMETER);
 
       // Update state variables
       this.state.kineticEnergy += 0.5*MASS*p.speed()**2/this.state.number;
       this.stateHandle(p, this);
 
       // Edge detection
-      if(p.x + DIAMETER/2 >= this.x + this.w || p.x - DIAMETER/2 <= this.x){
-        p.dx *= -1;
+      if(p.xPos + DIAMETER/2 >= this.xPos + this.width || p.xPos - DIAMETER/2 <= this.xPos){
+        p.xSpeed *= -1;
       }
-      if(p.y + DIAMETER/2 >= this.y + this.h || p.y - DIAMETER/2 <= this.y){
-        p.dy *= -1;
+      if(p.yPos + DIAMETER/2 >= this.yPos + this.height || p.yPos - DIAMETER/2 <= this.yPos){
+        p.ySpeed *= -1;
       }
 
       // Update position
-      p.x += p.dx;
-      p.y += p.dy;
+      p.xPos += p.xSpeed;
+      p.yPos += p.ySpeed;
     }
 
     // Update state variables
@@ -129,19 +129,19 @@ class Simulation extends Box {
   displayState(){
     fill("black");
 
-    text(`PV = NkT`, this.x, this.h + this.y + 50);
-    text(`N=${this.state.number}`, this.x, this.h + this.y + 90);
-    text(`V=${round(this.state.volume*5.88*10**-5, 2)} μm^3`, this.x, this.h + this.y + 120);
-    text(`T=${round(this.state.temperature,2)} K`, this.x, this.h + this.y + 150);
-    text(`P=${round(this.state.pressure*2.511*10**6,2)} MPa`, this.x, this.h + this.y + 180);
+    text(`PV = NkT`, this.xPos, this.height + this.yPos + 50);
+    text(`N=${this.state.number}`, this.xPos, this.height + this.yPos + 90);
+    text(`V=${round(this.state.volume*5.88*10**-5, 2)} μm^3`, this.xPos, this.height + this.yPos + 120);
+    text(`T=${round(this.state.temperature,2)} K`, this.xPos, this.height + this.yPos + 150);
+    text(`P=${round(this.state.pressure*2.511*10**6,2)} MPa`, this.xPos, this.height + this.yPos + 180);
   }
 }
 
 function transferHot(p, local){
   // Implements the functionality of maxwell's demon for the left box
-  if(maxwell.inBounds(p.x, p.y, -DIAMETER/2) && p.speed()>=3){
+  if(maxwell.inBounds(p.xPos, p.yPos, -DIAMETER/2) && p.speed()>=3){
     // Add particle to other box
-    let newParticle = new Particle(p.x+maxwell.w+DIAMETER, p.y, p.dx, p.dy);
+    let newParticle = new Particle(p.xPos+maxwell.width+DIAMETER, p.yPos, p.xSpeed, p.ySpeed);
     rightBox.particleArray.push(newParticle);
 
     // Remove particle from current box
@@ -152,9 +152,9 @@ function transferHot(p, local){
 
 function transferCold(p, local){
   // Implements the functionality of maxwell's demon for the right box
-  if(maxwell.inBounds(p.x, p.y, -DIAMETER/2) && p.speed()<3){
+  if(maxwell.inBounds(p.xPos, p.yPos, -DIAMETER/2) && p.speed()<3){
     // Add particle to other box
-    let newParticle = new Particle(p.x-maxwell.w-DIAMETER, p.y, p.dx, p.dy);
+    let newParticle = new Particle(p.xPos-maxwell.width-DIAMETER, p.yPos, p.xSpeed, p.ySpeed);
     leftBox.particleArray.push(newParticle);
 
     // Remove particle from current box
@@ -195,7 +195,7 @@ function draw() {
   rightBox.displayState();
 
   fill("grey");
-  rect(maxwell.x, maxwell.y, maxwell.w, maxwell.h);
+  rect(maxwell.xPos, maxwell.yPos, maxwell.width, maxwell.height);
 
   if(mouseIsPressed && leftBox.inBounds(mouseX, mouseY, DIAMETER)){
     leftBox.particleArray.push(new Particle(mouseX, mouseY, random(-startSpeed, startSpeed), random(-startSpeed, startSpeed)));
