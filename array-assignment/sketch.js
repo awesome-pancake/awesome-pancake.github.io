@@ -25,21 +25,29 @@ class Particle {
   }
 
   speed(){
+    // Returns the speed of the particle
     return sqrt(this.xSpeed**2 + this.ySpeed**2);
   }
 
   speedColour(){
-    return color(90*this.speed(), 60, 255-30*this.speed());
+    // Returns a colour that changes based on the speed of the particle
+    return color(
+      90*this.speed(), 
+      60, 
+      255-30*this.speed()
+    );
   }
 }
 
 class Box {
-  constructor(_x=0, _y=0, _w=500, _h=500, _l=500){
+  constructor(_x=0, _y=0, _w=500, _h=500, _l=500, _colour="black"){
+    // Some values for a box
     this.xPos = _x;
     this.yPos = _y;
     this.width = _w;
     this.height = _h;
     this.length = _l;
+    this.colour = _colour;
   }
 
   inBounds(_x, _y, space=0){
@@ -47,21 +55,27 @@ class Box {
     return _x >= this.xPos+ space && _y >= this.yPos + space && _x + space <= this.xPos + this.width && _y + space <= this.yPos + this.height;
   }
 
-  // Add a method to draw the box
+  draw(){
+    // Draws the box
+    strokeWeight(this.thickness);
+    fill(this.colour);
+    rect(this.xPos, this.yPos, this.width, this.height);
+  }
 }
 
 class Simulation extends Box {
-  // Simulation methods and objects
-  constructor(_x=0, _y=0, _w=500, _h=500, _l=500, _thickness=5, _handle=function(){}){
-    super(_x, _y, _w, _h, _l);
+  constructor(_colour, _x=0, _y=0, _w=500, _h=500, _l=500, _thickness=5, _handle=function(){}){
+    // Creates a new simulation object
+    super(_x, _y, _w, _h, _l, _colour); // Creates background box
     this.thickness = _thickness;
 
+    // Object holding state variables for the gas
     this.state = {
       kineticEnergy: 0,
       pressure: 0,
       temperature: 0,
       number: 0,
-      volume: 0, // Either keep this, or remove Box.volume()
+      volume: 0,
     };
 
     // Implements a handler that modifies the state of each particle on each simulation tick
@@ -88,10 +102,8 @@ class Simulation extends Box {
   update(){
     // Updates the state of each particle and draws them
 
-    // Draw box
-    strokeWeight(this.thickness);
-    fill("black");
-    rect(this.xPos, this.yPos, this.width, this.height);
+    // Draw box background
+    this.draw();
 
     // Set state variables
     this.state.kineticEnergy = 0;
@@ -127,13 +139,13 @@ class Simulation extends Box {
   }
 
   displayState(){
+    // Displays the emergent states of the gas in a given simulation
     fill("black");
-
-    text(`PV = NkT`, this.xPos, this.height + this.yPos + 50);
-    text(`N=${this.state.number}`, this.xPos, this.height + this.yPos + 90);
-    text(`V=${round(this.state.volume*5.88*10**-5, 2)} μm^3`, this.xPos, this.height + this.yPos + 120);
-    text(`T=${round(this.state.temperature,2)} K`, this.xPos, this.height + this.yPos + 150);
-    text(`P=${round(this.state.pressure*2.511*10**6,2)} MPa`, this.xPos, this.height + this.yPos + 180);
+    text(`PV = NkT`, this.xPos, this.height + this.yPos + 50);                                            // Formula
+    text(`N=${this.state.number}`, this.xPos, this.height + this.yPos + 90);                              // Number of molecules
+    text(`V=${round(this.state.volume*5.88*10**-5, 2)} μm^3`, this.xPos, this.height + this.yPos + 120);  // Volume
+    text(`T=${round(this.state.temperature,2)} K`, this.xPos, this.height + this.yPos + 150);             // Temperature
+    text(`P=${round(this.state.pressure*2.511*10**6,2)} MPa`, this.xPos, this.height + this.yPos + 180);  // Pressure
   }
 }
 
@@ -163,14 +175,15 @@ function transferCold(p, local){
   }
 }
 
-let leftBox = new Simulation(50, 50, 600, 600, 600, 0, transferHot);
-let rightBox = new Simulation(700, 50, 600, 600, 600, 0, transferCold);
-let maxwell = new Box(650, 275, 50, 125, 50);
+// Objects for both simulations, as well as the box separating them.
+let leftBox = new Simulation("black", 50, 50, 600, 600, 600, 0, transferHot);
+let rightBox = new Simulation("black", 700, 50, 600, 600, 600, 0, transferCold);
+let maxwell = new Box(650, 275, 50, 125, 50, "grey"); // Named after Maxwell's demon: https://en.wikipedia.org/wiki/Maxwell%27s_demon
 
 function mouseWheel(event){
   // Changes the speed of the spawning gas
   if(event.delta <= 0){
-    startSpeed *= startSpeed <= 10 ? 1.1 : 1;
+    startSpeed *= startSpeed <= 8 ? 1.1 : 1;
   } 
   else {
     startSpeed /= startSpeed <= 1 ? 1 : 1.1;
@@ -178,6 +191,7 @@ function mouseWheel(event){
 }
 
 function windowResized(){
+  // Resizes the window
   resizeCanvas(windowWidth, windowHeight);
 }
 
@@ -187,16 +201,13 @@ function setup() {
 }
 
 function draw() {
-  background(150);
+  background(255);
 
-  // Put all of this in a display state function
-
-  leftBox.displayState();
-  rightBox.displayState();
-
+  // Little piece of text that is displayed at the bottom
   fill("grey");
-  rect(maxwell.xPos, maxwell.yPos, maxwell.width, maxwell.height);
+  text("Scroll to change incoming gas temperature!", 50, 900);
 
+  // Places down new particles in each box
   if(mouseIsPressed && leftBox.inBounds(mouseX, mouseY, DIAMETER)){
     leftBox.particleArray.push(new Particle(mouseX, mouseY, random(-startSpeed, startSpeed), random(-startSpeed, startSpeed)));
   }
@@ -204,6 +215,12 @@ function draw() {
     rightBox.particleArray.push(new Particle(mouseX, mouseY, random(-startSpeed, startSpeed), random(-startSpeed, startSpeed)));
   }
 
+  // Displays the emergent states of each box
+  leftBox.displayState();
+  rightBox.displayState();
+
+  // Draws each box and updates their states
   leftBox.update();
   rightBox.update();
+  maxwell.draw();
 }

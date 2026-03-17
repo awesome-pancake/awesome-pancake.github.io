@@ -5,6 +5,7 @@
 - [Images](image-demo)
 - [Ball Array](ball-array)
 - [Generative Art](generative-art)
+- [Perlin Noise](perlin)
 
 ## Assignments
 - [Interactive Scene](interactive-scene)
