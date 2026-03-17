@@ -190,11 +190,6 @@ function mouseWheel(event){
   }
 }
 
-function windowResized(){
-  // Resizes the window
-  resizeCanvas(windowWidth, windowHeight);
-}
-
 function setup() {
   createCanvas(windowWidth, windowHeight);
   textSize(25);
