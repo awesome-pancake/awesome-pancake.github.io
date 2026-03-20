@@ -7,7 +7,9 @@
 - [Generative Art](generative-art)
 - [Perlin Noise](perlin)
 - [2D Grid](grid)
+- [Game of Life](rectangular-grid)
 
 ## Assignments
 - [Interactive Scene](interactive-scene)
 - [Array Assignment](array-assignment)
+- [2D Grid Assignment](grid-assignment)
