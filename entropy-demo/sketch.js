@@ -6,30 +6,33 @@
 // - Learned about classes and methods
 // - Also learned about object methods
 
-// This simulation uses a unit system based on SI:
-// 1 px = 38.891 nm
-// 1 frame = 1 ns
-// 1 mass unit = 1 AMU = 6.022x10^-26 kg
-const DIAMETER = 10; // Diameter of each particle in pixels
-const MASS = 4; // Mass of each particle in AMU
-const K = 0.1; // Boltzmann constant
+const DIAMETER = 10;
+const DSPEED = 0.1;
 let startSpeed = 5;
+let wheelMomentum = 0;
 
 let totalWidth = 0;
 let totalHeight = 0;
 
 let leftBox;
 let rightBox;
-let maxwell;
+let centerBox;
+
+let wheelImg;
+let wheelAngle = 0;
+
+function preload(){
+  wheelImg = loadImage("Wheel.png");
+}
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  totalWidth = windowWidth;
-  totalHeight = windowHeight;
 
-  leftBox = new Simulation(0.1, 0.1, 0.3, 0.5, transferHot);
-  rightBox = new Simulation(0.5, 0.1, 0.3, 0.5, transferCold);
-  maxwell = new Box(0.4, 0.5, 0.1, 0.1); // Named after Maxwell's demon: https://en.wikipedia.org/wiki/Maxwell%27s_demon
+  leftBox = new Simulation(0.1, 0.1, 0.35, 0.8, transferLeft);
+  rightBox = new Simulation(0.55, 0.1, 0.35, 0.8, transferRight);
+  centerBox = new Simulation(0.45, 0.45, 0.1, 0.1, transferCenter);
+
+  imageMode(CENTER);
 }
 
 class Particle {
@@ -111,15 +114,16 @@ class Simulation extends Box {
       circle(p.xPos, p.yPos, DIAMETER);
 
       // Update state variables
-      //this.state.kineticEnergy += 0.5*MASS*p.speed()**2/this.state.number;
       this.stateHandle(p, this);
 
       // Edge detection
       if(p.xPos + DIAMETER/2 >= this.xPos + this.width || p.xPos - DIAMETER/2 <= this.xPos){
         p.xSpeed *= -1;
+        p.xPos = p.xPos + DIAMETER/2 >= this.xPos + this.width ? this.xPos + this.width - DIAMETER / 2 - 1: this.xPos + DIAMETER / 2 + 1;
       }
       if(p.yPos + DIAMETER/2 >= this.yPos + this.height || p.yPos - DIAMETER/2 <= this.yPos){
         p.ySpeed *= -1;
+        p.yPos = p.yPos + DIAMETER/2 >= this.yPos + this.height ? this.yPos + this.height - DIAMETER / 2 - 1: this.yPos + DIAMETER / 2 + 1;
       }
 
       // Update position
@@ -129,12 +133,11 @@ class Simulation extends Box {
   }
 }
 
-function transferHot(p, local){
-  // Implements the functionality of maxwell's demon for the left box
-  if(maxwell.inBounds(p.xPos, p.yPos, -DIAMETER/2) && p.speed()>=3){
-    // Add particle to other box
-    let newParticle = new Particle(p.xPos+maxwell.width+DIAMETER, p.yPos, p.xSpeed, p.ySpeed);
-    rightBox.particleArray.push(newParticle);
+function transferLeft(p, local){
+  if(centerBox.inBounds(p.xPos, p.yPos, -DIAMETER/2)){
+    // Add particle to center box
+    let newParticle = new Particle(p.xPos+DIAMETER, p.yPos, p.xSpeed, p.ySpeed);
+    centerBox.particleArray.push(newParticle);
 
     // Remove particle from current box
     let particleIndex = local.particleArray.indexOf(p);
@@ -142,12 +145,61 @@ function transferHot(p, local){
   }
 }
 
-function transferCold(p, local){
-  // Implements the functionality of maxwell's demon for the right box
-  if(maxwell.inBounds(p.xPos, p.yPos, -DIAMETER/2) && p.speed()<3){
-    // Add particle to other box
-    let newParticle = new Particle(p.xPos-maxwell.width-DIAMETER, p.yPos, p.xSpeed, p.ySpeed);
-    leftBox.particleArray.push(newParticle);
+function transferRight(p, local){
+  if(centerBox.inBounds(p.xPos, p.yPos, -DIAMETER/2)){
+    // Add particle to center box
+    let newParticle = new Particle(p.xPos-DIAMETER, p.yPos, p.xSpeed, p.ySpeed);
+    centerBox.particleArray.push(newParticle);
+
+    // Remove particle from current box
+    let particleIndex = local.particleArray.indexOf(p);
+    local.particleArray.splice(particleIndex, 1);
+  }
+}
+
+function transferCenter(p, local){
+  // Right Box
+  if(rightBox.inBounds(p.xPos, p.yPos, -DIAMETER/2)){
+    // Update wheel momentum
+    if(wheelMomentum < p.speed()){
+      wheelMomentum += DSPEED;
+      let newParticle = new Particle(p.xPos+DIAMETER, p.yPos, p.xSpeed-DSPEED, p.ySpeed-DSPEED);
+      rightBox.particleArray.push(newParticle);
+    } 
+    else if(wheelMomentum > p.speed()){
+      wheelMomentum -= DSPEED;
+      let newParticle = new Particle(p.xPos+DIAMETER, p.yPos, p.xSpeed+DSPEED, p.ySpeed+DSPEED);
+      rightBox.particleArray.push(newParticle);
+    } 
+    else {
+      let newParticle = new Particle(p.xPos+DIAMETER, p.yPos, p.xSpeed, p.ySpeed);
+      rightBox.particleArray.push(newParticle);
+    }
+
+    // Remove particle from current box
+    let particleIndex = local.particleArray.indexOf(p);
+    local.particleArray.splice(particleIndex, 1);
+  }
+
+  // Left Box
+  if(leftBox.inBounds(p.xPos, p.yPos, -DIAMETER/2)){
+    // Update wheel momentum
+    if(wheelMomentum > -p.speed()){
+      wheelMomentum -= DSPEED;
+      let newParticle = new Particle(p.xPos-DIAMETER, p.yPos, p.xSpeed+DSPEED, p.ySpeed+DSPEED);
+      leftBox.particleArray.push(newParticle);
+    } 
+    else if(wheelMomentum < -p.speed()){
+      wheelMomentum += DSPEED;
+      let newParticle = new Particle(p.xPos-DIAMETER, p.yPos, p.xSpeed-DSPEED, p.ySpeed-DSPEED);
+      leftBox.particleArray.push(newParticle);
+    } 
+    else {
+      let newParticle = new Particle(p.xPos-DIAMETER, p.yPos, p.xSpeed, p.ySpeed);
+      leftBox.particleArray.push(newParticle);
+    }
+    // let newParticle = new Particle(p.xPos-DIAMETER, p.yPos, p.xSpeed, p.ySpeed);
+    // leftBox.particleArray.push(newParticle);
 
     // Remove particle from current box
     let particleIndex = local.particleArray.indexOf(p);
@@ -165,7 +217,9 @@ function mouseWheel(event){
   }
 }
 
-// Objects for both simulations, as well as the box separating them.
+function windowResized(){
+  resizeCanvas(windowWidth, windowHeight);
+}
 
 function draw() {
   background(255);
@@ -181,5 +235,13 @@ function draw() {
   // Draws each box and updates their states
   leftBox.update();
   rightBox.update();
-  maxwell.draw();
+  centerBox.update();
+
+  wheelAngle += 0.01*wheelMomentum;
+
+  translate(width / 2, height / 2 + 0.1*height);
+  rotate(wheelAngle);
+  image(wheelImg, 0, 0, 0.1*width, 0.1*width);
+  rotate(-wheelAngle);
+  translate(-width / 2, -height / 2 - 0.1*height);
 }
