@@ -7,7 +7,7 @@
 // - Also learned about object methods
 
 const DIAMETER = 5;
-const DSPEED = 0.1;
+const DSPEED = 0.25;
 let startSpeed = 5;
 let wheelMomentum = 0;
 
@@ -229,10 +229,6 @@ function mousePressed(){
   return false;
 }
 
-function windowResized(){
-  resizeCanvas(windowWidth, windowHeight);
-}
-
 function draw() {
   background(255);
 
@@ -250,6 +246,7 @@ function draw() {
   centerBox.update();
 
   wheelAngle += 0.01*wheelMomentum;
+  wheelMomentum -= 0.02*wheelMomentum;
 
   translate(width / 2, height / 2 + 0.1*height);
   rotate(wheelAngle);
