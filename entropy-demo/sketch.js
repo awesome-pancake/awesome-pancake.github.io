@@ -225,6 +225,10 @@ function mouseWheel(event){
   }
 }
 
+function mousePressed(){
+  return false;
+}
+
 function windowResized(){
   resizeCanvas(windowWidth, windowHeight);
 }
