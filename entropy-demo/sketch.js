@@ -28,6 +28,14 @@ function preload(){
 function setup() {
   createCanvas(windowWidth, windowHeight);
 
+  document.addEventListener("selectstart", (event) => {
+    event.preventDefault();
+  });
+
+  document.addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+  });
+
   leftBox = new Simulation(0.1, 0.1, 0.35, 0.8, transferLeft);
   rightBox = new Simulation(0.55, 0.1, 0.35, 0.8, transferRight);
   centerBox = new Simulation(0.45, 0.45, 0.1, 0.1, transferCenter);
