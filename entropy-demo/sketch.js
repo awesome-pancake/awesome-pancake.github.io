@@ -6,7 +6,7 @@
 // - Learned about classes and methods
 // - Also learned about object methods
 
-const DIAMETER = 10;
+const DIAMETER = 5;
 const DSPEED = 0.1;
 let startSpeed = 5;
 let wheelMomentum = 0;
