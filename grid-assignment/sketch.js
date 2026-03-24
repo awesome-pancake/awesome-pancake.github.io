@@ -5,42 +5,59 @@
 // Extra for Experts:
 // - describe what you did to take this project "above and beyond"
 
-// Using an object as a kind of enum
-const BlockTypes = {
-  AIR: 0,
-  GRASS: 1,
-  DIRT: 2
-};
+const LENGTH = 64;
+const WIDTH = 64;
 
-class Block {
-  Block(type){
-    this.id = type;
-  }
-}
+let new_grid;
+let grass_img;
 
-class BlockGroup {
-  BlockGroup(){
-    this.blocks = [];
-    for(let x=0; x<10; x++){
-      this.blocks.push([]);
-      for(let y=0; y<10; y++){
-        this.blocks[x].push([]);
-        for(let y=0; y<10; y++){
-          this.blocks[x][y].push(new Block(BlockTypes.AIR));
-        }
+class Chunk {
+  constructor(){
+    this.block_grid = [[]];
+
+    for(let i=0; i<LENGTH; i++){
+      this.block_grid.push([]);
+      for(let j=0; j<WIDTH; j++){
+        this.block_grid[i].push(floor(8*noise(0.1*i, 0.1*j)));
       }
     }
   }
 
-  add_block(block, x, y, z){
-    this.blocks[x][y][z] = push(block);
+  draw_blocks(){
+    for(let i=0; i<LENGTH; i++){
+      for(let j=0; j<WIDTH; j++){
+        fill(color(25*this.block_grid[i][j], 255));
+        rect(i*10, j*10, 10, 10);
+      }
+    }
   }
+
+  draw_blocks_3D(){
+    for(let i=0; i<LENGTH; i++){
+      for(let j=0; j<WIDTH; j++){
+        // Isometric projection
+        // TODO: make this start drawing at the top
+        let x = sqrt(3)*(i+j)/2;
+        let y = (i-j-this.block_grid[i][j])/2;
+
+        fill(color(0, 25*this.block_grid[i][j], 50, 255));
+        rect(x*10, y*10+height/2, 10, 10);
+      }
+    }
+  }
+}
+
+function preload(){
+  // Load grass image, dirt background image
 }
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
+  new_grid = new Chunk();
 }
 
 function draw() {
   background(220);
+  new_grid.draw_blocks_3D();
+  //console.log(new_grid.block_grid);
 }

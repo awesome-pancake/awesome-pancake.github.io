@@ -1,10 +1,18 @@
 
 
 const CELL_SIZE = 10;
+const SPEED = 3;
+let counter = 0;
 let grid = [];
 let rows;
 let cols;
 let running = false;
+
+let gosper;
+
+function preload(){
+  gosper = loadJSON("gosper.json");
+}
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -12,16 +20,19 @@ function setup() {
   rows = floor(height/CELL_SIZE) + 2;
   cols = floor(width/CELL_SIZE) + 2;
 
-  create_random_grid();
+  create_grid();
 }
 
 function draw() {
   noStroke();
   background(220);
   draw_grid();
-  if(running){
+  if(running && counter >= SPEED){
     grid = update_grid();
+    counter = 0;
   }
+
+  counter++;
 }
 
 function mousePressed(){
@@ -34,10 +45,29 @@ function mousePressed(){
 function keyPressed(){
   if(key === "r"){
     running = !running;
+  } 
+  else if(key === "e"){
+    grid = [];
+    create_grid();
+  }
+  else if(key === "g"){
+    grid = gosper;
+  }
+  else if(key === " "){
+    grid = update_grid();
   }
 }
 
 function create_random_grid(){
+  for(let i=0; i<cols; i++){
+    grid.push([]);
+    for(let j=0; j<rows; j++){
+      grid[i].push(floor(random(0,2)));
+    }
+  }
+}
+
+function create_grid(){
   for(let i=0; i<cols; i++){
     grid.push([]);
     for(let j=0; j<rows; j++){
