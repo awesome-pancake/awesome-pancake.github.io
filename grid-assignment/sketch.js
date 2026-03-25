@@ -1,47 +1,65 @@
-// Project Title
+// Grid Assignment
 // Emmett Hoffman
 // Date
 //
 // Extra for Experts:
-// - describe what you did to take this project "above and beyond"
+// - 
 
-const LENGTH = 64;
-const WIDTH = 64;
+const ROOT3 = 1.7321;
 
 let new_grid;
 let grass_img;
 
-class Chunk {
+class Renderer {
   constructor(){
+    this.klength = 64;
+    this.kwidth = 64;
     this.block_grid = [[]];
 
-    for(let i=0; i<LENGTH; i++){
+    for(let i=0; i<this.klength; i++){
       this.block_grid.push([]);
-      for(let j=0; j<WIDTH; j++){
-        this.block_grid[i].push(floor(8*noise(0.1*i, 0.1*j)));
+      for(let j=0; j<this.kwidth; j++){
+        this.block_grid[i].push(4+floor(16*noise(0.05*i, 0.05*j)));
       }
     }
   }
 
-  draw_blocks(){
-    for(let i=0; i<LENGTH; i++){
-      for(let j=0; j<WIDTH; j++){
-        fill(color(25*this.block_grid[i][j], 255));
-        rect(i*10, j*10, 10, 10);
-      }
-    }
+  draw_block(gridX,gridY,scale){
+    // Isometric projection
+    let x = sqrt(3)*(gridX-gridY)/2;
+    let y = (gridX+gridY-2*this.block_grid[gridX][gridY])/2;
+
+    x = scale*x + 1.5*scale*this.kwidth;
+    y = scale*y + 0.5 * scale * this.kwidth;
+
+    fill(color(5*this.block_grid[gridX][gridY], 5*this.block_grid[gridX][gridY], 50, 255));
+    quad( // Right face
+      x, y,
+      x + scale * ROOT3 / 2, y - scale / 2,
+      x + scale * ROOT3 / 2, y + scale / 2,
+      x, y + scale
+    );
+
+    quad( // Left face
+      x, y,
+      x - scale * ROOT3 / 2, y - scale / 2,
+      x - scale * ROOT3 / 2, y + scale / 2,
+      x, y + scale
+    );
+
+    fill(color(0, 10*this.block_grid[gridX][gridY], 50, 255));
+    quad( // Top face
+      x, y,
+      x + scale * ROOT3 / 2, y - scale / 2,
+      x, y - scale,
+      x - scale * ROOT3 / 2, y - scale / 2
+    );
   }
 
   draw_blocks_3D(){
-    for(let i=0; i<LENGTH; i++){
-      for(let j=0; j<WIDTH; j++){
-        // Isometric projection
-        // TODO: make this start drawing at the top
-        let x = sqrt(3)*(i+j)/2;
-        let y = (i-j-this.block_grid[i][j])/2;
-
-        fill(color(0, 25*this.block_grid[i][j], 50, 255));
-        rect(x*10, y*10+height/2, 10, 10);
+    for(let i=0; i<this.klength; i++){
+      for(let j=0; j<this.kwidth; j++){
+        this.draw_block(i, j, 10);
       }
     }
   }
@@ -52,12 +70,11 @@ function preload(){
 }
 
 function setup() {
-  createCanvas(windowWidth, windowHeight);
-  new_grid = new Chunk();
+  noStroke();
+  canvas = createCanvas(windowWidth, windowHeight);
+  new_grid = new Renderer();
+  new_grid.draw_blocks_3D();
 }
 
 function draw() {
-  background(220);
-  new_grid.draw_blocks_3D();
-  //console.log(new_grid.block_grid);
 }
