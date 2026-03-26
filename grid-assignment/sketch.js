@@ -22,7 +22,10 @@ let new_grid;
 let grass_img;
 
 class Renderer {
-  constructor(){
+  constructor(x, y){
+    this.xPos = x;
+    this.yPos = y;
+
     this.klength = 64;
     this.kwidth = 64;
     this.kheight = MAX_HEIGHT;
@@ -36,21 +39,21 @@ class Renderer {
 
         for(let k=0; k<this.kheight; k++){
 
-          let groundLevel = floor(MAX_HEIGHT*noise(0.05*i, 0.05*j));
+          let groundLevel = floor(MAX_HEIGHT*noise(0.05*(i+this.xPos), 0.05*(j+this.yPos))); // Sets the ground level for the world
 
-          if(groundLevel >= k && k >= WATER_HEIGHT){ // Spawns grass
+          if(groundLevel === k && k > WATER_HEIGHT){ // Spawns grass
             this.block_grid[i][j].push(ID.GRASS);
           }
 
-          if(groundLevel < k && k < WATER_HEIGHT){ // Spawns water
+          if(groundLevel < k && k <= WATER_HEIGHT){ // Spawns water
             this.block_grid[i][j].push(ID.WATER);
           }
 
-          if(groundLevel >= k && k < WATER_HEIGHT){ // Spawns dirt
+          if(groundLevel > k){ // Spawns dirt
             this.block_grid[i][j].push(ID.DIRT);
           }
 
-          if(groundLevel === k && k < WATER_HEIGHT){ // Spawns sand
+          if(groundLevel === k && k <= WATER_HEIGHT){ // Spawns sand
             this.block_grid[i][j].push(ID.SAND);
           }
         }
@@ -60,12 +63,12 @@ class Renderer {
 
   draw_block(gridX, gridY, gridZ, type, scale){ // Draws a block of a certain type at a given coordinate
     // Isometric projection
-    let x = sqrt(3)*(gridX-gridY)/2;
-    let y = (gridX+gridY-2*gridZ)/2;
+    let x = sqrt(3)*(gridX + this.xPos - gridY - this.yPos)/2;
+    let y = (gridX + this.xPos + this.yPos + gridY - 2*gridZ)/2;
 
-    // Place the thing in the middle of the screen
-    x = scale*x + 1.5*scale*this.kwidth;
-    y = scale*y + 0.5 * scale * this.kwidth;
+    // Scale the stuff
+    x = scale*x + width/2;
+    y = scale*y + height/2;
 
     // Initialize the colours
     let topColor = color(255, 0);
@@ -115,7 +118,7 @@ class Renderer {
     );
   }
 
-  draw_blocks_3D(){
+  async draw_blocks_3D(){
     for(let i=0; i<this.klength; i++){
       for(let j=0; j<this.kwidth; j++){
         for(let k=0; k<this.kheight; k++){
@@ -126,14 +129,10 @@ class Renderer {
   }
 }
 
-function preload(){
-  // Load grass image, dirt background image
-}
-
 function setup() {
   noStroke();
   canvas = createCanvas(windowWidth, windowHeight);
-  new_grid = new Renderer();
+  let new_grid = new Renderer(0, 0);
   new_grid.draw_blocks_3D();
 }
 
