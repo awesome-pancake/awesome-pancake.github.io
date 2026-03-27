@@ -7,9 +7,22 @@
 // - Used the quad function
 
 const ROOT3 = 1.7321;
-const MAX_HEIGHT = 32;
-const WATER_HEIGHT = MAX_HEIGHT/2-3;
 const SCALE = 0.005;
+
+let frequencySlider;
+let heightSlider;
+let waterHeightSlider;
+let stoneHeightSlider;
+
+let PARAMETERS = {
+  MAX_HEIGHT: 32,
+  WATER_HEIGHT: 13,
+  STONE_HEIGHT: 3,
+  FREQUENCY: 0.05,
+  Z_NOISE: 0,
+  X_OFFSET: 0,
+  Y_OFFSET: 0
+};
 
 // Used as an enum for the different block types.
 const ID = {
@@ -17,7 +30,8 @@ const ID = {
   GRASS: 1,
   WATER: 2,
   DIRT: 3,
-  SAND: 4
+  SAND: 4,
+  STONE: 5
 };
 
 let new_grid;
@@ -29,7 +43,7 @@ class Renderer {
 
     this.klength = 64;
     this.kwidth = 64;
-    this.kheight = MAX_HEIGHT;
+    this.kheight = PARAMETERS.MAX_HEIGHT;
     this.block_grid = [[]];
 
     for(let i=0; i<this.klength; i++){
@@ -37,23 +51,27 @@ class Renderer {
 
       for(let j=0; j<this.kwidth; j++){
         this.block_grid[i].push([]);
-        let groundLevel = floor(MAX_HEIGHT*noise(0.05*(i+this.xPos), 0.05*(j+this.yPos))); // Sets the ground level for the world
+        let groundLevel = floor(PARAMETERS.MAX_HEIGHT*noise(
+          PARAMETERS.FREQUENCY*(i+this.xPos) + PARAMETERS.X_OFFSET, 
+          PARAMETERS.FREQUENCY*(j+this.yPos) + PARAMETERS.Y_OFFSET, 
+          PARAMETERS.FREQUENCY*PARAMETERS.Z_NOISE
+        )); // Sets the ground level for the world
 
         for(let k=0; k<this.kheight; k++){
 
-          if(groundLevel === k && k > WATER_HEIGHT){ // Spawns grass
+          if(groundLevel === k && k > PARAMETERS.WATER_HEIGHT){ // Spawns grass
             this.block_grid[i][j].push(ID.GRASS);
           }
-
-          if(groundLevel < k && k <= WATER_HEIGHT){ // Spawns water
+          else if(groundLevel < k && k <= PARAMETERS.WATER_HEIGHT){ // Spawns water
             this.block_grid[i][j].push(ID.WATER);
           }
-
-          if(groundLevel > k){ // Spawns dirt
+          else if(groundLevel > k && groundLevel - PARAMETERS.STONE_HEIGHT < k){ // Spawns dirt
             this.block_grid[i][j].push(ID.DIRT);
           }
-
-          if(groundLevel === k && k <= WATER_HEIGHT){ // Spawns sand
+          else if(groundLevel - PARAMETERS.STONE_HEIGHT >= k){ // Spawns stone
+            this.block_grid[i][j].push(ID.STONE);
+          }
+          else if(groundLevel === k && k <= PARAMETERS.WATER_HEIGHT){ // Spawns sand
             this.block_grid[i][j].push(ID.SAND);
           }
         }
@@ -69,7 +87,7 @@ class Renderer {
     // Scale the stuff
     let scale = SCALE*width;
     x = scale*x + width/2;
-    y = scale*y + scale*MAX_HEIGHT;
+    y = scale*y + scale*PARAMETERS.MAX_HEIGHT;
 
     // Initialize the colours
     let topColor = color(255, 0);
@@ -83,16 +101,20 @@ class Renderer {
       sideColor = color(5*gridZ, 5*gridZ, 50, 255);
       break;
     case ID.WATER: // Water colours
-      topColor = color(10, 30, 220, gridZ < WATER_HEIGHT ? 0 : 63);
+      topColor = color(10, 30, 220, gridZ < PARAMETERS.WATER_HEIGHT ? 0 : 63);
       sideColor = color(0, 0, 0, 0);
       break;
     case ID.DIRT: // Dirt colours
-      topColor = color(5*gridZ, 5*gridZ, 50, 255);
-      sideColor = color(5*gridZ, 5*gridZ, 50, 255);
+      topColor = color(5*gridZ, 5*gridZ, 50-5*gridZ, 255);
+      sideColor = color(5*gridZ, 5*gridZ, 50-5*gridZ, 255);
       break;
     case ID.SAND: // Sand colours
       topColor = color(10*gridZ, 10*gridZ, 50, 255);
       sideColor = color(10*gridZ, 10*gridZ, 50, 255);
+      break;
+    case ID.STONE: // Stone colours
+      topColor = color(7*gridZ, 7*gridZ, 7*gridZ, 255);
+      sideColor = color(7*gridZ, 7*gridZ, 7*gridZ, 255);
       break;
     default:
       break;
@@ -151,7 +173,7 @@ class Renderer {
         }
         
         // Draws the top three layers of ground
-        this.draw_block(i, j, topBlock-2, this.block_grid[i][j][topBlock-1]);
+        this.draw_block(i, j, topBlock-2, this.block_grid[i][j][topBlock-2]);
         this.draw_block(i, j, topBlock-1, this.block_grid[i][j][topBlock-1]);
         this.draw_block(i, j, topBlock, this.block_grid[i][j][topBlock]);
 
@@ -163,16 +185,42 @@ class Renderer {
 
 function setup() {
   noStroke();
-  noLoop();
   createCanvas(windowWidth, windowHeight);
   background(220);
+
   new_grid = new Renderer(0, 0);
   new_grid.update();
+
+  // Initialize the sliders
+  frequencySlider = createSlider(0, 0.1, 0.05, 0.001);
+  heightSlider = createSlider(0, 48, 32, 1);
+  waterHeightSlider = createSlider(0, 32, 13, 1);
+  stoneHeightSlider = createSlider(0, 10, 3, 1);
+  zNoiseSlider = createSlider(0, 20, 0, 0.1);
+  xOffsetSlider = createSlider(0, 5, 0, 0.01);
+  yOffsetSlider = createSlider(0, 5, 0, 0.01);
+  
+  // Position the sliders
+  frequencySlider.position(10, 10);
+  heightSlider.position(10, 30);
+  waterHeightSlider.position(10, 50);
+  stoneHeightSlider.position(10, 70);
+  zNoiseSlider.position(10, 90);
+  xOffsetSlider.position(10, 110);
+  yOffsetSlider.position(10, 130);
 }
 
-function mousePressed(){
-  console.log("Sigmatic!");
-  background(220);
-  new_grid.block_grid[10][10].push(ID.DIRT);
-  new_grid.update();
+function draw(){
+  if(mouseIsPressed){
+    background(220);
+    PARAMETERS.FREQUENCY = frequencySlider.value();
+    PARAMETERS.MAX_HEIGHT = heightSlider.value();
+    PARAMETERS.WATER_HEIGHT = waterHeightSlider.value();
+    PARAMETERS.STONE_HEIGHT = stoneHeightSlider.value();
+    PARAMETERS.Z_NOISE = zNoiseSlider.value();
+    PARAMETERS.X_OFFSET = xOffsetSlider.value();
+    PARAMETERS.Y_OFFSET = yOffsetSlider.value();
+    new_grid = new Renderer(0, 0);
+    new_grid.update();
+  }
 }
