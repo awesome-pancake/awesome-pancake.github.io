@@ -3,16 +3,11 @@
 // Date
 //
 // Extra for Experts:
-// - Investigated 3D grids
+// - Investigated 3D arrays
 // - Used the quad function
 
 const ROOT3 = 1.7321;
 const SCALE = 0.005;
-
-let frequencySlider;
-let heightSlider;
-let waterHeightSlider;
-let stoneHeightSlider;
 
 let PARAMETERS = {
   MAX_HEIGHT: 32,
@@ -38,24 +33,30 @@ let new_grid;
 
 class Renderer {
   constructor(x, y){
+    // On-screen position
+    // TODO: make this actually the on screen position
     this.xPos = x;
     this.yPos = y;
 
+    // Define some parameters about the world
     this.klength = 64;
     this.kwidth = 64;
     this.kheight = PARAMETERS.MAX_HEIGHT;
     this.block_grid = [[]];
 
+    // Builds the block grid
     for(let i=0; i<this.klength; i++){
       this.block_grid.push([]);
 
       for(let j=0; j<this.kwidth; j++){
         this.block_grid[i].push([]);
+
+        // Sets the ground level of the world
         let groundLevel = floor(PARAMETERS.MAX_HEIGHT*noise(
           PARAMETERS.FREQUENCY*(i+this.xPos) + PARAMETERS.X_OFFSET, 
           PARAMETERS.FREQUENCY*(j+this.yPos) + PARAMETERS.Y_OFFSET, 
           PARAMETERS.FREQUENCY*PARAMETERS.Z_NOISE
-        )); // Sets the ground level for the world
+        ));
 
         for(let k=0; k<this.kheight; k++){
 
@@ -79,12 +80,14 @@ class Renderer {
     }
   }
 
-  draw_block(gridX, gridY, gridZ, type){ // Draws a block of a certain type at a given coordinate
+  draw_block(gridX, gridY, gridZ, type){
+    // Draws a block of a certain type at a given coordinate
+
     // Isometric projection
     let x = sqrt(3)*(gridX + this.xPos - gridY - this.yPos)/2;
     let y = (gridX + this.xPos + this.yPos + gridY - 2*gridZ)/2;
 
-    // Scale the stuff
+    // Scale the stuff and put it in the right spot
     let scale = SCALE*width;
     x = scale*x + width/2;
     y = scale*y + scale*PARAMETERS.MAX_HEIGHT;
@@ -101,7 +104,7 @@ class Renderer {
       sideColor = color(5*gridZ, 5*gridZ, 50, 255);
       break;
     case ID.WATER: // Water colours
-      topColor = color(10, 30, 220, gridZ < PARAMETERS.WATER_HEIGHT ? 0 : 63);
+      topColor = color(10, 30, 220, gridZ < PARAMETERS.WATER_HEIGHT ? 0 : 60);
       sideColor = color(0, 0, 0, 0);
       break;
     case ID.DIRT: // Dirt colours
