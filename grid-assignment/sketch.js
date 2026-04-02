@@ -100,24 +100,25 @@ class Renderer {
     // TODO: make colours cap at a certain height.
     switch(type){
     case ID.GRASS: // Grass colours
-      topColor = color(0, 10*gridZ, 50, 255);
-      sideColor = color(5*gridZ, 5*gridZ, 50, 255);
+      topColor = color(0, this.minMax(150, 10*gridZ, 200), 50, 255);
+      sideColor = color(this.minMax(50, 5*gridZ, 100), this.minMax(50, 5*gridZ, 100), 50, 255);
       break;
     case ID.WATER: // Water colours
       topColor = color(10, 30, 220, gridZ < PARAMETERS.WATER_HEIGHT ? 0 : 60);
       sideColor = color(0, 0, 0, 0);
       break;
     case ID.DIRT: // Dirt colours
-      topColor = color(5*gridZ, 5*gridZ, 50-5*gridZ, 255);
-      sideColor = color(5*gridZ, 5*gridZ, 50-5*gridZ, 255);
+      topColor = color(this.minMax(50, 5*gridZ, 100), this.minMax(50, 5*gridZ, 100), 50, 255);
+      sideColor = color(this.minMax(50, 5*gridZ, 100), this.minMax(50, 5*gridZ, 100), 50, 255);
       break;
     case ID.SAND: // Sand colours
       topColor = color(10*gridZ, 10*gridZ, 50, 255);
       sideColor = color(10*gridZ, 10*gridZ, 50, 255);
       break;
     case ID.STONE: // Stone colours
-      topColor = color(7*gridZ, 7*gridZ, 7*gridZ, 255);
-      sideColor = color(7*gridZ, 7*gridZ, 7*gridZ, 255);
+      let grey = this.minMax(50, 7*gridZ, 150);
+      topColor = color(grey, grey, grey, 255);
+      sideColor = color(grey, grey, grey, 255);
       break;
     default:
       break;
@@ -151,6 +152,7 @@ class Renderer {
     for(let i=0; i<this.klength; i++){ // Loops through x values
       for(let j=0; j<this.kwidth; j++){ // Loops through y values
 
+        // Only certain blocks are drawn in order to maintain performance
         // Sets the top level to look at
         let topBlock = this.block_grid[i][j].length - 1;
         
@@ -165,12 +167,12 @@ class Renderer {
           }
         }
 
-        // Draws water
+        // Draws top layer of water
         if(this.block_grid[i][j][topBlock] === ID.WATER){
           this.draw_block(i, j, topBlock, this.block_grid[i][j][topBlock]);
         }
 
-        // Descends to seafloor
+        // Descends to seafloor to draw blocks at the bottom
         while(this.block_grid[i][j][topBlock] === ID.WATER){
           topBlock--;
         }
@@ -183,6 +185,11 @@ class Renderer {
         // TODO: only draw a block under another block if it is exposed to air.
       }
     }
+  }
+
+  minMax(minimum, value, maximum){
+    // Caps a value at a maximum and a minimum
+    return max(min(maximum, value), minimum);
   }
 }
 
