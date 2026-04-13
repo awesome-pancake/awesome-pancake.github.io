@@ -42,14 +42,14 @@ class Renderer {
     this.klength = 64;
     this.kwidth = 64;
     this.kheight = PARAMETERS.MAX_HEIGHT;
-    this.block_grid = [[]];
+    this.blockGrid = [[]];
 
     // Builds the block grid
     for(let i=0; i<this.klength; i++){
-      this.block_grid.push([]);
+      this.blockGrid.push([]);
 
       for(let j=0; j<this.kwidth; j++){
-        this.block_grid[i].push([]);
+        this.blockGrid[i].push([]);
 
         // Sets the ground level of the world
         let groundLevel = floor(PARAMETERS.MAX_HEIGHT*noise(
@@ -61,19 +61,19 @@ class Renderer {
         for(let k=0; k<this.kheight; k++){
 
           if(groundLevel === k && k > PARAMETERS.WATER_HEIGHT){ // Spawns grass
-            this.block_grid[i][j].push(ID.GRASS);
+            this.blockGrid[i][j].push(ID.GRASS);
           }
           else if(groundLevel < k && k <= PARAMETERS.WATER_HEIGHT){ // Spawns water
-            this.block_grid[i][j].push(ID.WATER);
+            this.blockGrid[i][j].push(ID.WATER);
           }
           else if(groundLevel > k && groundLevel - PARAMETERS.STONE_HEIGHT < k){ // Spawns dirt
-            this.block_grid[i][j].push(ID.DIRT);
+            this.blockGrid[i][j].push(ID.DIRT);
           }
           else if(groundLevel - PARAMETERS.STONE_HEIGHT >= k){ // Spawns stone
-            this.block_grid[i][j].push(ID.STONE);
+            this.blockGrid[i][j].push(ID.STONE);
           }
           else if(groundLevel === k && k <= PARAMETERS.WATER_HEIGHT){ // Spawns sand
-            this.block_grid[i][j].push(ID.SAND);
+            this.blockGrid[i][j].push(ID.SAND);
           }
         }
       }
@@ -97,7 +97,6 @@ class Renderer {
     let sideColor = color(255, 0);
 
     // Selects the proper colours for each type of block
-    // TODO: make colours cap at a certain height.
     switch(type){
     case ID.GRASS: // Grass colours
       topColor = color(0, this.minMax(150, 10*gridZ, 200), 50, 255);
@@ -154,35 +153,33 @@ class Renderer {
 
         // Only certain blocks are drawn in order to maintain performance
         // Sets the top level to look at
-        let topBlock = this.block_grid[i][j].length - 1;
+        let topBlock = this.blockGrid[i][j].length - 1;
         
         if(i === this.klength-1){ // Draws the rightmost wall
           for(let k = 0; k < topBlock; k++){
-            this.draw_block(i, j, k, this.block_grid[i][j][k]);
+            this.draw_block(i, j, k, this.blockGrid[i][j][k]);
           }
         }
         else if(j === this.kwidth-1){ // Draws the leftmost wall
           for(let k = 0; k < topBlock; k++){
-            this.draw_block(i, j, k, this.block_grid[i][j][k]);
+            this.draw_block(i, j, k, this.blockGrid[i][j][k]);
           }
         }
 
         // Draws top layer of water
-        if(this.block_grid[i][j][topBlock] === ID.WATER){
-          this.draw_block(i, j, topBlock, this.block_grid[i][j][topBlock]);
+        if(this.blockGrid[i][j][topBlock] === ID.WATER){
+          this.draw_block(i, j, topBlock, this.blockGrid[i][j][topBlock]);
         }
 
         // Descends to seafloor to draw blocks at the bottom
-        while(this.block_grid[i][j][topBlock] === ID.WATER){
+        while(this.blockGrid[i][j][topBlock] === ID.WATER){
           topBlock--;
         }
         
         // Draws the top three layers of ground
-        this.draw_block(i, j, topBlock-2, this.block_grid[i][j][topBlock-2]);
-        this.draw_block(i, j, topBlock-1, this.block_grid[i][j][topBlock-1]);
-        this.draw_block(i, j, topBlock, this.block_grid[i][j][topBlock]);
-
-        // TODO: only draw a block under another block if it is exposed to air.
+        this.draw_block(i, j, topBlock-2, this.blockGrid[i][j][topBlock-2]);
+        this.draw_block(i, j, topBlock-1, this.blockGrid[i][j][topBlock-1]);
+        this.draw_block(i, j, topBlock, this.blockGrid[i][j][topBlock]);
       }
     }
   }
