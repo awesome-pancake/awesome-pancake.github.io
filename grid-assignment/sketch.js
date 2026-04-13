@@ -1,9 +1,10 @@
 // Grid Assignment
 // Emmett Hoffman
-// Date
+// April 15, 2026
 //
 // Extra for Experts:
 // - Investigated 3D arrays
+// - Investigated isometric projection
 // - Used the quad function
 
 const ROOT3 = 1.7321;
