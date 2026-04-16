@@ -6,10 +6,15 @@
 // - Investigated 3D arrays
 // - Investigated isometric projection
 // - Used the quad function
+// - Used const objects to make enumeration more readable
 
+// Various helpful constants
 const ROOT3 = 1.7321;
 const SCALE = 0.005;
+const BRIGHTNESS_RATE = 5;
+const TOP_BLOCKS = 2;
 
+// World generation parameters
 let PARAMETERS = {
   MAX_HEIGHT: 32,
   WATER_HEIGHT: 13,
@@ -30,12 +35,12 @@ const ID = {
   STONE: 5
 };
 
+// Grid object to be used
 let new_grid;
 
 class Renderer {
   constructor(x, y){
-    // On-screen position
-    // TODO: make this actually the on screen position
+    // Initial position
     this.xPos = x;
     this.yPos = y;
 
@@ -59,8 +64,8 @@ class Renderer {
           PARAMETERS.FREQUENCY*PARAMETERS.Z_NOISE
         ));
 
+        // Loops through every height level of the world
         for(let k=0; k<this.kheight; k++){
-
           if(groundLevel === k && k > PARAMETERS.WATER_HEIGHT){ // Spawns grass
             this.blockGrid[i][j].push(ID.GRASS);
           }
@@ -100,23 +105,23 @@ class Renderer {
     // Selects the proper colours for each type of block
     switch(type){
     case ID.GRASS: // Grass colours
-      topColor = color(0, this.minMax(150, 10*gridZ, 200), 50, 255);
-      sideColor = color(this.minMax(50, 5*gridZ, 100), this.minMax(50, 5*gridZ, 100), 50, 255);
+      topColor = color(0, this.minMax(150, 2*BRIGHTNESS_RATE*gridZ, 200), 50, 255);
+      sideColor = color(this.minMax(50, BRIGHTNESS_RATE*gridZ, 100), this.minMax(50, BRIGHTNESS_RATE*gridZ, 100), 50, 255);
       break;
     case ID.WATER: // Water colours
-      topColor = color(10, 30, 220, gridZ < PARAMETERS.WATER_HEIGHT ? 0 : 60);
+      topColor = color(10, 30, 220, gridZ < PARAMETERS.WATER_HEIGHT ? 0 : 50);
       sideColor = color(0, 0, 0, 0);
       break;
     case ID.DIRT: // Dirt colours
-      topColor = color(this.minMax(50, 5*gridZ, 100), this.minMax(50, 5*gridZ, 100), 50, 255);
-      sideColor = color(this.minMax(50, 5*gridZ, 100), this.minMax(50, 5*gridZ, 100), 50, 255);
+      topColor = color(this.minMax(50, BRIGHTNESS_RATE*gridZ, 100), this.minMax(50, BRIGHTNESS_RATE*gridZ, 100), 50, 255);
+      sideColor = color(this.minMax(50, BRIGHTNESS_RATE*gridZ, 100), this.minMax(50, BRIGHTNESS_RATE*gridZ, 100), 50, 255);
       break;
     case ID.SAND: // Sand colours
-      topColor = color(10*gridZ, 10*gridZ, 50, 255);
-      sideColor = color(10*gridZ, 10*gridZ, 50, 255);
+      topColor = color(2*BRIGHTNESS_RATE*gridZ, 2*BRIGHTNESS_RATE*gridZ, 50, 255);
+      sideColor =color(2*BRIGHTNESS_RATE*gridZ, 2*BRIGHTNESS_RATE*gridZ, 50, 255);
       break;
     case ID.STONE: // Stone colours
-      let grey = this.minMax(50, 7*gridZ, 150);
+      let grey = this.minMax(50, 1.5*BRIGHTNESS_RATE*gridZ, 150);
       topColor = color(grey, grey, grey, 255);
       sideColor = color(grey, grey, grey, 255);
       break;
@@ -124,6 +129,7 @@ class Renderer {
       break;
     }
 
+    // Draw all the faces of each cube
     fill(sideColor);
     quad( // Right face
       x, y,
@@ -149,6 +155,7 @@ class Renderer {
   }
 
   async update(){
+    // Updates the image on screen
     for(let i=0; i<this.klength; i++){ // Loops through x values
       for(let j=0; j<this.kwidth; j++){ // Loops through y values
 
@@ -177,10 +184,10 @@ class Renderer {
           topBlock--;
         }
         
-        // Draws the top three layers of ground
-        this.draw_block(i, j, topBlock-2, this.blockGrid[i][j][topBlock-2]);
-        this.draw_block(i, j, topBlock-1, this.blockGrid[i][j][topBlock-1]);
-        this.draw_block(i, j, topBlock, this.blockGrid[i][j][topBlock]);
+        // Draws the top n layers of ground
+        for(let k=TOP_BLOCKS; k>=0; k--){
+          this.draw_block(i, j, topBlock-k, this.blockGrid[i][j][topBlock-k]);
+        }
       }
     }
   }
@@ -191,15 +198,18 @@ class Renderer {
   }
 }
 
-function setup() {
+function setup(){
   noStroke();
   createCanvas(windowWidth, windowHeight);
   background(220);
 
+  // Creates the 3d block in the middle
   new_grid = new Renderer(0, 0);
   new_grid.update();
 
   // Initialize the sliders
+  // Leaving them unlabeled is a stylistic choice as it encourages the user to try each of them
+  // This is not just an excuse for being lazy
   frequencySlider = createSlider(0, 0.1, 0.05, 0.001);
   heightSlider = createSlider(0, 48, 32, 1);
   waterHeightSlider = createSlider(0, 32, 13, 1);
@@ -219,8 +229,11 @@ function setup() {
 }
 
 function draw(){
+  // Only draws when necessary, ie. when the value of any slider changes
   if(mouseIsPressed){
     background(220);
+
+    // Update the value of each slider
     PARAMETERS.FREQUENCY = frequencySlider.value();
     PARAMETERS.MAX_HEIGHT = heightSlider.value();
     PARAMETERS.WATER_HEIGHT = waterHeightSlider.value();
@@ -228,6 +241,8 @@ function draw(){
     PARAMETERS.Z_NOISE = zNoiseSlider.value();
     PARAMETERS.X_OFFSET = xOffsetSlider.value();
     PARAMETERS.Y_OFFSET = yOffsetSlider.value();
+
+    // Draw the updated blocks
     new_grid = new Renderer(0, 0);
     new_grid.update();
   }
