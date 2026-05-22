@@ -9,6 +9,7 @@
 - [2D Grid](grid)
 - [Game of Life](rectangular-grid)
 - [Console](console)
+- [Sierpinski Triangle](triangle)
 
 ## Assignments
 - [Interactive Scene](interactive-scene)
