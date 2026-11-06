@@ -56,5 +56,7 @@ function draw() {
 
   if(keyIsDown(UP_ARROW)){
     console.log(convertToHex());
+  } else {
+
   }
 }
